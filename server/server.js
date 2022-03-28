@@ -10,7 +10,7 @@ const app = express();
 const uri = require('./db/url');
 mongoose.connect(uri);
 const db = mongoose.connection;
-db.on('error', (error)=>    console.log(error));
+db.on('error', (error)=>    console.log("1" + error));
 db.once('open', ()=>console.log("connected to db"))
 
 //equivalent to body parser
@@ -49,6 +49,7 @@ const users = [
 //check the header for the access token, verify if it is valid
 //if the token is valid continue, else leave with 401
 const verify = (req, res, next) => {
+    console.log("verify")
     const authHeader = req.headers.authorization;
     if(authHeader){
         const token = authHeader.split(" ")[1];
@@ -88,7 +89,7 @@ app.post("/api/refresh", (req, res)=>{
         return res.status(403).json("JWT is not valid");
     }
     jwt.verify(refreshToken, "myrefreshsecretkey", (err, user)=> {
-        err && console.log(err);
+        err && console.log("1 " + err);
         refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
@@ -100,31 +101,38 @@ app.post("/api/refresh", (req, res)=>{
 })
 
 app.post("/api/refreshdb",  async(req, res)=>{
+    console.log("refreshdb")
     const refreshToken = req.body.token;
-    if(!refreshToken) return res.status(401).json("You are not authenticated");
+    if(!refreshToken){
+        console.log("no refresh token")
+        return res.status(401).json("You are not authenticated");
+    } 
     try{
         const refreshTokenDB = await RefreshToken.findOne({value: refreshToken}).exec();
         if(!refreshTokenDB){
+            console.log("jwt not valid")
             return res.status(403).json("JWT is not valid");
         } 
     } catch(error){
-        console.log(error);
+        console.log("3 " + error);
     }
     jwt.verify(refreshToken, "myrefreshsecretkey", async (err, user)=>{
-        err && console.log(err);
+        err && console.log("4 " + err);
         try{
             await RefreshToken.deleteOne({value: refreshToken}).exec();
             const newAccessToken = generateAccessToken(user);
             const newRefreshToken = generateRefreshToken(user);
-            const refreshTokenDB = new RefreshToken({value: refreshToken});
+            const refreshTokenDB = new RefreshToken({value: newRefreshToken});
             refreshTokenDB.save(function(err){
-                console.log(err);
+                if(err){
+                    console.log(err)
+                }
             })
             res.status(200).json({
                 accessToken: newAccessToken, refreshToken:  newRefreshToken
             })
         } catch (error){
-            console.log(error);
+            console.log("6 " + error);
         }
 
     })
@@ -151,25 +159,28 @@ app.post("/api/loginJWT", verify, function(request, response){
 })
 
 app.post("/api/loginJWTdb", verify, async function(req, res){
-    const accessToken = request.body.token;
+    console.log("loginjwtdb")
+    const accessToken = req.body.token;
     let userid = jwt.decode(accessToken).id;
     try{
         const user = await User.findById(userid).exec();
         if(user){
             const accessToken = generateAccessToken(user);
             const refreshToken = generateRefreshToken(user);
-            const refreshTokenDB = new RefreshToken({value: refreshToken});
-            refreshTokenDB.save(function(err){
-                console.log(err);
-            })
-            response.status(200).json({
+            // const refreshTokenDB = new RefreshToken({value: refreshToken});
+            // refreshTokenDB.save(function(err){
+            //     if(err){
+            //         console.log(err)
+            //     }
+            // })
+            res.status(200).json({
                 username: user.username,
                 isAdmin: user.isAdmin,
                 accessToken: accessToken,
                 refreshToken: refreshToken
             })
         } else {
-            response.status(400).json("invalid token");
+            res.status(400).json("invalid token");
         }
     } catch (error){
         console.log(error);
@@ -185,7 +196,6 @@ app.post("/api/login", (req, res) =>{
         return u.username === username && u.password === password
     });
     if(user){
-        console.log(user);
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
         refreshTokens.push(refreshToken);
@@ -207,6 +217,10 @@ app.post("/api/logindb", async function(req, res){
         if(user && (user.password === password)){
             const accessToken = generateAccessToken(user);
             const refreshToken = generateRefreshToken(user);
+            const refreshTokenDB = new RefreshToken({value: refreshToken});
+            refreshTokenDB.save(function(err){
+                console.log(err);
+            })
             res.json({
                 username: user.username,
                 isAdmin: user.isAdmin,

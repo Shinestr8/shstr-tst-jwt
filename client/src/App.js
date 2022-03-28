@@ -18,7 +18,7 @@ function App() {
     console.log("refresh token");
     try{
       const [, refreshToken] = fetchCookies();
-      const res = await axios.post("/refresh", {token: refreshToken});
+      const res = await axios.post("/refreshdb", {token: refreshToken});
       setUser({
         ...user,accessToken: res.data.accessToken, refreshToken: res.data.refreshToken
       })
@@ -64,6 +64,8 @@ function App() {
     return response;
   }
 
+
+  //il faut rework cette fonction, elle ne change pas les cookies et néanmoins ça fonctionne
   async function logFromJWT(){
     const [accessToken, refreshToken] = fetchCookies();
     if(accessToken&&refreshToken){
@@ -77,7 +79,7 @@ function App() {
           token: accessToken,
           refresh: refreshToken
         }
-        const response = await axiosJWT.post("/loginJWT", data, config);
+        const response = await axiosJWT.post("/loginJWTdb", data, config);
         console.log(response.data);
         setUser(response.data);
       } catch (error) {
@@ -128,7 +130,7 @@ function App() {
   async function login(e){
     e.preventDefault();
     try{
-      const res = await axios.post("/login", {username, password});
+      const res = await axios.post("/logindb", {username, password});
       setUser(res.data);
       setUsername("");
       setPassword("");
@@ -150,7 +152,7 @@ function App() {
       const data ={
         token: user.refreshToken,
       }
-      await axiosJWT.post("/logout", data, config);
+      await axiosJWT.post("/logoutdb", data, config);
       setUser(null);
       setPassword("");
       setUsername("");
