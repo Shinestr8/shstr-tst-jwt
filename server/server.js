@@ -1,14 +1,12 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-
+const User = require('./models/user')
 
 const app = express();
 
-const info = require('./db/dbconfig');
-const username = info.username;
-const password = info.password;
-const uri = `mongodb://${username}:${password}@192.168.1.35:27017/jwt?authSource=admin`;
+// const info = require('./db/dbconfig');
+const uri = require('./db/url');
 mongoose.connect(uri);
 const db = mongoose.connection;
 db.on('error', (error)=>    console.log(error));
@@ -123,23 +121,28 @@ app.post("/api/loginJWT", verify, function(request, response){
 //login method
 //fetch user info from url, search if there is one matching in the "database"
 //if there is a user, generate a token pair and send infos to the client
-app.post("/api/login", (req, res) =>{
+app.post("/api/login", async (req, res) =>{
     const {username, password} = req.body;
-    const user = users.find(u=>{
-        return u.username === username && u.password === password
-    });
-    if(user){
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-        refreshTokens.push(refreshToken);
-        res.json({
-            username: user.username,
-            isAdmin: user.isAdmin,
-            accessToken: accessToken,
-            refreshToken: refreshToken
-        })
-    } else {
-        res.status(400).json("Username or password incorrect");
+    try{
+        const user = await User.findOne({ username: username }).exec();
+        if(user.password !== password){
+            return
+        }
+        if(user){
+            const accessToken = generateAccessToken(user);
+            const refreshToken = generateAccessToken(user);
+            refreshTokens.push(refreshToken);
+            res.json({
+                username: user.username,
+                isAdmin: user.isAdmin,
+                accessToken: accessToken,
+                refreshToken: refreshToken
+            })
+        } else {
+            res.status(400).json("Username or password incorrect");
+        }
+    } catch(error){
+        console.log(error);
     }
 })
 
