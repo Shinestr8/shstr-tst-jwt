@@ -1,10 +1,24 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+
 
 const app = express();
 
+const info = require('./db/dbconfig');
+const username = info.username;
+const password = info.password;
+const uri = `mongodb://${username}:${password}@192.168.1.35:27017/jwt?authSource=admin`;
+mongoose.connect(uri);
+const db = mongoose.connection;
+db.on('error', (error)=>    console.log(error));
+db.once('open', ()=>console.log("connected to db"))
+
 //equivalent to body parser
 app.use(express.json())
+
+const userRouter = require('./routes/user');
+app.use('/user', userRouter);
 
 
 //Hard coded users
@@ -28,6 +42,8 @@ const users = [
         isAdmin: true
     }
 ];
+
+// app.use(require('./routes/user.js'));
 
 
 //verify middleware
