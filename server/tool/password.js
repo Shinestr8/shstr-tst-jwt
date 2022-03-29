@@ -1,4 +1,5 @@
 let crypto = require('crypto');
+const secret = require('../config.json').hash;
 
 function getSalt(length) {
     console.log("getSalt");
@@ -12,7 +13,7 @@ function getSalt(length) {
    return result;
 }
 
-function encrypt(password, secret) {
+function encrypt(password) {
      let result = [];
      let salt = getSalt(32);
      password = password + salt + secret;
@@ -21,7 +22,8 @@ function encrypt(password, secret) {
      return [salt, password];
 }
 
-function check(password, salt,secret, hash){
+function check(password, salt, hash){
+    console.log(secret);
     const salted = password + salt + secret;
     const newHash = crypto.createHash('sha256').update(salted).digest('hex');
     if(hash === newHash){
