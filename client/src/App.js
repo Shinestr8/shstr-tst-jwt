@@ -1,4 +1,3 @@
-
 import './App.css';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -8,11 +7,30 @@ import jwt_decode from "jwt-decode";
 
 function App() {
 
+
+  //state
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  //axios instance
+  const axiosJWT = axios.create();
+
+  //interceptor, executed before every request on axiosJWT
+  axiosJWT.interceptors.request.use(
+    async (config) => {
+      let currentDate = new Date();
+      const [accessToken] = fetchCookies();
+      const decodedToken = jwt_decode(accessToken);
+      if(decodedToken.exp * 1000 < currentDate.getTime()){
+        const data = await refreshToken();
+        config.headers["authorization"] = "Bearer " + data.accessToken; 
+      }
+      return config
+    }, (error)=>{return Promise.reject(error)}
+  )
 
   async function refreshToken(){
     try{
@@ -27,26 +45,8 @@ function App() {
     }
   }
 
-  const axiosJWT = axios.create();
-  
-
-  axiosJWT.interceptors.request.use(
-    
-    async (config) => {
-      console.log("intercepted");
-      let currentDate = new Date();
-      const [accessToken] = fetchCookies();
-      const decodedToken = jwt_decode(accessToken);
-      if(decodedToken.exp * 1000 < currentDate.getTime()){
-        const data = await refreshToken();
-        config.headers["authorization"] = "Bearer " + data.accessToken; 
-      }
-      return config
-    }, (error)=>{return Promise.reject(error)}
-  )
-
+  //useEffect that executes only on first load, to login with JWT
   useEffect(function(){
-    console.log("useeffect")
     logFromJWT();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[])
@@ -63,8 +63,6 @@ function App() {
     return response;
   }
 
-
-  //il faut rework cette fonction, elle ne change pas les cookies et néanmoins ça fonctionne
   async function logFromJWT(){
     const [accessToken, refreshToken] = fetchCookies();
     if(accessToken&&refreshToken){
@@ -86,6 +84,7 @@ function App() {
     }
   }
 
+  //success event handler
   function alertSuccess(){
     setSuccess(true);
     setTimeout(function(){
@@ -93,6 +92,7 @@ function App() {
   }, 2000);
   }
 
+  //alert handler
   function alertError(){
     setError(true);
     setTimeout(function(){
@@ -100,16 +100,18 @@ function App() {
   }, 2000);
   }
 
+  //username handler
   function handleTextChange(e){
     setUsername(e.target.value);
   }
 
+  //password handler
   function handlePasswordChange(e){
     setPassword(e.target.value);
   }
   
   
-
+  //function called on delete click
   async function handleDelete(e, id){
     e.preventDefault();
     setSuccess(false);
@@ -124,6 +126,7 @@ function App() {
     }
   }
 
+  //function called on login click
   async function login(e){
     e.preventDefault();
     try{
@@ -138,6 +141,7 @@ function App() {
     }
   }
 
+  //function called on logout click
   async function handleLogout(e){
     e.preventDefault();
     const [accessToken, refreshToken] = fetchCookies();
@@ -150,7 +154,6 @@ function App() {
       const data ={
         token: refreshToken,
       }
-      console.log("logout attempt");
       await axios.post("/logout", data, config);
       setUser(null);
       setPassword("");
@@ -164,9 +167,11 @@ function App() {
     }
   }
 
+
   if(user === null){
+    //login form
     return (
-    
+      
       <div className='login'>
         <form>
           <header><h2>Login</h2></header>
@@ -192,9 +197,10 @@ function App() {
     );
   }
 
+
+  //user dashboard
   return (
     <div className='content'>
-      {JSON.stringify(user)}
       {success && (
             <div className='msg-success'>User deleted successfully</div>
           )}
