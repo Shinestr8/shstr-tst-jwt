@@ -52,10 +52,8 @@ const verify = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if(authHeader){
         const token = authHeader.split(" ")[1];
-        console.log(token)
         jwt.verify(token, "mysecretkey", (err, user)=>{
             if(err){
-                console.log("invalid token")
                 return res.status(403).json("Token is not valid");
             }
             req.user = user;
@@ -71,7 +69,7 @@ let refreshTokens = [];
 
 //function that generates the access tokens
 function generateAccessToken(user){
-    return jwt.sign({id:user.id, isAdmin:user.isAdmin}, "mysecretkey", {expiresIn: "15m"});
+    return jwt.sign({id:user.id, isAdmin:user.isAdmin}, "mysecretkey", {expiresIn: "5s"});
 }
 
 //function that generates the refresh token
@@ -238,10 +236,8 @@ app.post("/api/logout", verify, (req, res)=>{
     res.status(200).json("Log out successfully");
 })
 
-app.post("/api/logoutdb", verify, async (req, res) =>{
-    console.log("deleting token");
+app.post("/api/logoutdb", async (req, res) =>{
     const refreshToken = req.body.token;
-    console.log(refreshToken);
     try{
         await RefreshToken.deleteOne({value: refreshToken}).exec();
         res.status(200).json("successful logoutdb");

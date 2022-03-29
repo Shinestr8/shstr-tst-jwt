@@ -15,15 +15,12 @@ function App() {
   const [success, setSuccess] = useState(false);
 
   async function refreshToken(){
-    console.log("refresh token");
     try{
       const [, refreshToken] = fetchCookies();
       const res = await axios.post("/refreshdb", {token: refreshToken});
-      setUser({
-        ...user,accessToken: res.data.accessToken, refreshToken: res.data.refreshToken
-      })
       document.cookie = "access=" + res.data.accessToken;
       document.cookie = "refresh=" + res.data.refreshToken;
+      console.log("refreshed")
       return res.data;
     }catch(err){
       console.log(err);
@@ -34,11 +31,12 @@ function App() {
   
 
   axiosJWT.interceptors.request.use(
+    
     async (config) => {
+      console.log("intercepted");
       let currentDate = new Date();
       const [accessToken] = fetchCookies();
       const decodedToken = jwt_decode(accessToken);
-      console.log(new Date(decodedToken.exp * 1000));
       if(decodedToken.exp * 1000 < currentDate.getTime()){
         const data = await refreshToken();
         config.headers["authorization"] = "Bearer " + data.accessToken; 
@@ -48,6 +46,7 @@ function App() {
   )
 
   useEffect(function(){
+    console.log("useeffect")
     logFromJWT();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[])
@@ -80,8 +79,7 @@ function App() {
           refresh: refreshToken
         }
         const response = await axiosJWT.post("/loginJWTdb", data, config);
-        console.log(response.data);
-        setUser(response.data);
+        setUser(response.data.user);
       } catch (error) {
         console.log(error);
       }
@@ -116,10 +114,9 @@ function App() {
     e.preventDefault();
     setSuccess(false);
     setError(false);
-    console.log("delete");
     try{
       await axiosJWT.delete("/users/"+id, {
-        headers: {authorization: "Bearer " + user.accessToken}
+        headers: {authorization: "Bearer " + fetchCookies()[0]}
       });
       alertSuccess();
     } catch (err){
@@ -131,7 +128,7 @@ function App() {
     e.preventDefault();
     try{
       const res = await axios.post("/logindb", {username, password});
-      setUser(res.data);
+      setUser(res.data.user);
       setUsername("");
       setPassword("");
       document.cookie = "access=" + res.data.accessToken;
@@ -143,16 +140,18 @@ function App() {
 
   async function handleLogout(e){
     e.preventDefault();
+    const [accessToken, refreshToken] = fetchCookies();
     try {
       const config = {
         headers:{
-          authorization: "Bearer " + user.accessToken,
+          authorization: "Bearer " + accessToken,
         }
       };
       const data ={
-        token: user.refreshToken,
+        token: refreshToken,
       }
-      await axiosJWT.post("/logoutdb", data, config);
+      console.log("logout attempt");
+      await axios.post("/logoutdb", data, config);
       setUser(null);
       setPassword("");
       setUsername("");
@@ -195,6 +194,7 @@ function App() {
 
   return (
     <div className='content'>
+      {JSON.stringify(user)}
       {success && (
             <div className='msg-success'>User deleted successfully</div>
           )}
@@ -204,6 +204,7 @@ function App() {
       <div className='dashboard'>
         <header><h2>Dashboard</h2></header>
         <div className="dashboard-body">
+          
           <div><strong>User: </strong>{user.username}</div>
           <div><strong>Role: </strong>{user.isAdmin ? "Admin" : "User"}</div>
           
