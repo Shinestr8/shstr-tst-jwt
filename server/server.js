@@ -42,7 +42,7 @@ const verify = (req, res, next) => {
 
 //function that generates the access tokens
 function generateAccessToken(user){
-    return jwt.sign({id:user.id, isAdmin:user.isAdmin}, "mysecretkey", {expiresIn: "5s"});
+    return jwt.sign({id:user.id, isAdmin:user.isAdmin}, "mysecretkey", {expiresIn: "15"});
 }
 
 //function that generates the refresh token
