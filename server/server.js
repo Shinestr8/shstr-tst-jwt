@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('./models/user')
 const RefreshToken = require('./models/refreshToken');
-
+let secret = require('./config.json');
 const app = express();
 
 // const info = require('./db/dbconfig');
@@ -28,7 +28,7 @@ const verify = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if(authHeader){
         const token = authHeader.split(" ")[1];
-        jwt.verify(token, "mysecretkey", (err, user)=>{
+        jwt.verify(token, secret.access, (err, user)=>{
             if(err){
                 return res.status(403).json("Token is not valid");
             }
@@ -42,12 +42,12 @@ const verify = (req, res, next) => {
 
 //function that generates the access tokens
 function generateAccessToken(user){
-    return jwt.sign({id:user.id, isAdmin:user.isAdmin}, "mysecretkey", {expiresIn: "15"});
+    return jwt.sign({id:user.id, isAdmin:user.isAdmin}, secret.access, {expiresIn: "15m"});
 }
 
 //function that generates the refresh token
 function generateRefreshToken(user) {
-    return jwt.sign({id:user.id, isAdmin:user.isAdmin}, "myrefreshsecretkey");
+    return jwt.sign({id:user.id, isAdmin:user.isAdmin}, secret.refresh);
 }
 
 //POST HTTP method on path /api/refresh
@@ -72,7 +72,7 @@ app.post("/api/refresh",  async(req, res)=>{
 
     //if we reach this code, means that there is a valid param
     //verify the token
-    jwt.verify(refreshToken, "myrefreshsecretkey", async (err, user)=>{
+    jwt.verify(refreshToken, secret.refresh, async (err, user)=>{
         err && console.log("4 " + err);
         try{
             //delete previous token
@@ -186,7 +186,6 @@ app.delete("/api/users/:userId", verify, (req, res) =>{
         res.status(403).json("You are not allowed to delete this user");
     }
 })
-
 
 const PORT = 5000;
 app.listen(PORT, ()=> console.log(  `Login backend running on http://localhost:${PORT}`))   
