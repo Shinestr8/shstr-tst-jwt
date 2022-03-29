@@ -50,31 +50,44 @@ function generateRefreshToken(user) {
     return jwt.sign({id:user.id, isAdmin:user.isAdmin}, "myrefreshsecretkey");
 }
 
+//POST HTTP method on path /api/refresh
+//takes refreshToken as param
+//Return a new pair of access/refresh token if valid
 app.post("/api/refresh",  async(req, res)=>{
     const refreshToken = req.body.token;
+    //if no token, exit with 401 code
     if(!refreshToken){
         return res.status(401).json("You are not authenticated");
     } 
     try{
+        //checks if DB contains a refreshToken with that value
         const refreshTokenDB = await RefreshToken.findOne({value: refreshToken}).exec();
         if(!refreshTokenDB){
+            //if no identical token in DB, exit with code 403
             return res.status(403).json("JWT is not valid");
         } 
     } catch(error){
         console.log(error);
     }
+
+    //if we reach this code, means that there is a valid param
+    //verify the token
     jwt.verify(refreshToken, "myrefreshsecretkey", async (err, user)=>{
         err && console.log("4 " + err);
         try{
+            //delete previous token
             await RefreshToken.deleteOne({value: refreshToken}).exec();
+            //generate a new pair
             const newAccessToken = generateAccessToken(user);
             const newRefreshToken = generateRefreshToken(user);
+            //save new refresh in db
             const refreshTokenDB = new RefreshToken({value: newRefreshToken});
             refreshTokenDB.save(function(err){
                 if(err){
                     console.log(err)
                 }
             })
+            //send to client
             res.status(200).json({
                 accessToken: newAccessToken, refreshToken:  newRefreshToken
             })
@@ -85,12 +98,21 @@ app.post("/api/refresh",  async(req, res)=>{
     })
 })
 
+
+//HTTP POST method on /api/loginJWT
+//Allows a user to send a token and fetch info from it
+//uses verify middleware
+//takes accesstoken as param
 app.post("/api/loginJWT", verify, async function(req, res){
+    //if we reach this code, verify has successfully been executed, so accessToken is valid
     const accessToken = req.body.token;
     let userid = jwt.decode(accessToken).id;
+    //fetch userId from accessToken
     try{
+        //search user by id in database
         const user = await User.findById(userid).exec();
         if(user){
+            //if user exists, send details
             res.status(200).json({
                 user: {
                     username: user.username,
@@ -98,24 +120,32 @@ app.post("/api/loginJWT", verify, async function(req, res){
                 }
             })
         } else {
-            res.status(400).json("invalid token");
+            //if no user, send error 404
+            res.status(404).json("User doesnt exist");
         }
     } catch (error){
         console.log(error);
     }
 })
 
+
+//HTTP POST method on route /api/login
+//takes username and password as params
 app.post("/api/login", async function(req, res){
     const {username, password} = req.body;
     try {
+        //try to fetch user with param username
         const user = await User.findOne({ username: username }).exec();
+        //check if user exist and password matches
         if(user && (user.password === password)){
+            //generate token pair, save refresh in DB
             const accessToken = generateAccessToken(user);
             const refreshToken = generateRefreshToken(user);
             const refreshTokenDB = new RefreshToken({value: refreshToken});
             refreshTokenDB.save(function(err){
                 console.log(err);
             })
+            //send user and tokens to client
             res.json({
                 user:{
                     username: user.username,
@@ -132,14 +162,16 @@ app.post("/api/login", async function(req, res){
     }
 })
 
-
+//HTTP POST method on route /api/logout
+//takes refreshToken as param
 app.post("/api/logout", async (req, res) =>{
     const refreshToken = req.body.token;
     try{
+        //delete token with specified value from DB
         await RefreshToken.deleteOne({value: refreshToken}).exec();
         res.status(200).json("successful logoutdb");
     } catch(error){
-        res.status(500).json("an error happened");
+        res.status(500).json("an error happened, could not delete refreshToken with value" + refreshToken);
     }
 })
 
