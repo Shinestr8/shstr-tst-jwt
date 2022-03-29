@@ -17,7 +17,7 @@ function App() {
   async function refreshToken(){
     try{
       const [, refreshToken] = fetchCookies();
-      const res = await axios.post("/refreshdb", {token: refreshToken});
+      const res = await axios.post("/refresh", {token: refreshToken});
       document.cookie = "access=" + res.data.accessToken;
       document.cookie = "refresh=" + res.data.refreshToken;
       console.log("refreshed")
@@ -78,7 +78,7 @@ function App() {
           token: accessToken,
           refresh: refreshToken
         }
-        const response = await axiosJWT.post("/loginJWTdb", data, config);
+        const response = await axiosJWT.post("/loginJWT", data, config);
         setUser(response.data.user);
       } catch (error) {
         console.log(error);
@@ -127,7 +127,7 @@ function App() {
   async function login(e){
     e.preventDefault();
     try{
-      const res = await axios.post("/logindb", {username, password});
+      const res = await axios.post("/login", {username, password});
       setUser(res.data.user);
       setUsername("");
       setPassword("");
@@ -151,7 +151,7 @@ function App() {
         token: refreshToken,
       }
       console.log("logout attempt");
-      await axios.post("/logoutdb", data, config);
+      await axios.post("/logout", data, config);
       setUser(null);
       setPassword("");
       setUsername("");
@@ -207,19 +207,6 @@ function App() {
           
           <div><strong>User: </strong>{user.username}</div>
           <div><strong>Role: </strong>{user.isAdmin ? "Admin" : "User"}</div>
-          
-          {/* <div
-          className={`msg-error ${error ? 'show' : 'hidden'}`}
-          onTransitionEnd={() => setError(false)}
-        >
-          <strong>Error</strong>
-          </div> */}
-          {/* <div
-          className={`msg-success ${success ? 'show' : 'hidden'}`}
-          onTransitionEnd={() => setSuccess(false)}
-        >
-          <strong>Success!</strong>
-        </div> */}
         </div>
         
         <footer>

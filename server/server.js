@@ -20,30 +20,6 @@ const userRouter = require('./routes/user');
 app.use('/user', userRouter);
 
 
-//Hard coded users
-const users = [
-    {
-        id: "1",
-        username: "John",
-        password: "pass",
-        isAdmin: true
-    },
-    {
-        id: "2",
-        username: "Jane",
-        password: "pass",
-        isAdmin: false
-    },
-    {
-        id:"3",
-        username: "corentin",
-        password: "password",
-        isAdmin: true
-    }
-];
-
-// app.use(require('./routes/user.js'));
-
 
 //verify middleware
 //check the header for the access token, verify if it is valid
@@ -64,9 +40,6 @@ const verify = (req, res, next) => {
     }
 }
 
-//list that contains the list of active refreshTokens in the server memory
-let refreshTokens = [];
-
 //function that generates the access tokens
 function generateAccessToken(user){
     return jwt.sign({id:user.id, isAdmin:user.isAdmin}, "mysecretkey", {expiresIn: "5s"});
@@ -77,29 +50,7 @@ function generateRefreshToken(user) {
     return jwt.sign({id:user.id, isAdmin:user.isAdmin}, "myrefreshsecretkey");
 }
 
-//function that updates expired accessTokens
-//takes refreshtoken as body
-//verify the token, if it is valid send a new token pair to the user
-app.post("/api/refresh", (req, res)=>{
-    const refreshToken = req.body.token;
-    if(!refreshToken) return res.status(401).json("You are not authenticated");
-    //check if token is in the list
-    if(!refreshTokens.includes(refreshToken)){
-        return res.status(403).json("JWT is not valid");
-    }
-    jwt.verify(refreshToken, "myrefreshsecretkey", (err, user)=> {
-        err && console.log(err);
-        refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
-        const newAccessToken = generateAccessToken(user);
-        const newRefreshToken = generateRefreshToken(user);
-        refreshTokens.push(newRefreshToken);
-        res.status(200).json({
-            accessToken: newAccessToken, refreshToken:  newRefreshToken
-        })
-    })
-})
-
-app.post("/api/refreshdb",  async(req, res)=>{
+app.post("/api/refresh",  async(req, res)=>{
     const refreshToken = req.body.token;
     if(!refreshToken){
         return res.status(401).json("You are not authenticated");
@@ -134,27 +85,7 @@ app.post("/api/refreshdb",  async(req, res)=>{
     })
 })
 
-app.post("/api/loginJWT", verify, function(request, response){
-    const accessToken = request.body.token;
-    let userid = jwt.decode(accessToken).id;
-    const user = users.find(u=>{
-        return u.id === userid
-    })
-    if(user){
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-        refreshTokens.push(refreshToken);
-        response.status(200).json({
-            username: user.username,
-            isAdmin: user.isAdmin,
-            accessToken: accessToken,
-            refreshToken: refreshToken
-        })
-    }
-    response.status(400).json("Invalid token")
-})
-
-app.post("/api/loginJWTdb", verify, async function(req, res){
+app.post("/api/loginJWT", verify, async function(req, res){
     const accessToken = req.body.token;
     let userid = jwt.decode(accessToken).id;
     try{
@@ -174,32 +105,7 @@ app.post("/api/loginJWTdb", verify, async function(req, res){
     }
 })
 
-//login method
-//fetch user info from url, search if there is one matching in the "database"
-//if there is a user, generate a token pair and send infos to the client
-app.post("/api/login", (req, res) =>{
-    const {username, password} = req.body;
-    const user = users.find(u=>{
-        return u.username === username && u.password === password
-    });
-    if(user){
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-        refreshTokens.push(refreshToken);
-        res.json({
-            user: {
-                username: user.username,
-                isAdmin: user.isAdmin
-            },
-            accessToken: accessToken,
-            refreshToken: refreshToken
-        })
-    } else {
-        res.status(400).json("Username or password incorrect");
-    }
-})
-
-app.post("/api/logindb", async function(req, res){
+app.post("/api/login", async function(req, res){
     const {username, password} = req.body;
     try {
         const user = await User.findOne({ username: username }).exec();
@@ -227,16 +133,7 @@ app.post("/api/logindb", async function(req, res){
 })
 
 
-
-//logout method
-//Run verify middleware, then removes refreshtoken from the active list
-app.post("/api/logout", verify, (req, res)=>{
-    const refreshToken = req.body.token;
-    refreshTokens.filter((token) => token !== refreshToken);
-    res.status(200).json("Log out successfully");
-})
-
-app.post("/api/logoutdb", async (req, res) =>{
+app.post("/api/logout", async (req, res) =>{
     const refreshToken = req.body.token;
     try{
         await RefreshToken.deleteOne({value: refreshToken}).exec();
