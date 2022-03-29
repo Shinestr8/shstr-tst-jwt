@@ -49,12 +49,13 @@ const users = [
 //check the header for the access token, verify if it is valid
 //if the token is valid continue, else leave with 401
 const verify = (req, res, next) => {
-    console.log("verify")
     const authHeader = req.headers.authorization;
     if(authHeader){
         const token = authHeader.split(" ")[1];
+        console.log(token)
         jwt.verify(token, "mysecretkey", (err, user)=>{
             if(err){
+                console.log("invalid token")
                 return res.status(403).json("Token is not valid");
             }
             req.user = user;
@@ -70,7 +71,7 @@ let refreshTokens = [];
 
 //function that generates the access tokens
 function generateAccessToken(user){
-    return jwt.sign({id:user.id, isAdmin:user.isAdmin}, "mysecretkey", {expiresIn: "5s"});
+    return jwt.sign({id:user.id, isAdmin:user.isAdmin}, "mysecretkey", {expiresIn: "15m"});
 }
 
 //function that generates the refresh token
@@ -89,7 +90,7 @@ app.post("/api/refresh", (req, res)=>{
         return res.status(403).json("JWT is not valid");
     }
     jwt.verify(refreshToken, "myrefreshsecretkey", (err, user)=> {
-        err && console.log("1 " + err);
+        err && console.log(err);
         refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
@@ -101,20 +102,17 @@ app.post("/api/refresh", (req, res)=>{
 })
 
 app.post("/api/refreshdb",  async(req, res)=>{
-    console.log("refreshdb")
     const refreshToken = req.body.token;
     if(!refreshToken){
-        console.log("no refresh token")
         return res.status(401).json("You are not authenticated");
     } 
     try{
         const refreshTokenDB = await RefreshToken.findOne({value: refreshToken}).exec();
         if(!refreshTokenDB){
-            console.log("jwt not valid")
             return res.status(403).json("JWT is not valid");
         } 
     } catch(error){
-        console.log("3 " + error);
+        console.log(error);
     }
     jwt.verify(refreshToken, "myrefreshsecretkey", async (err, user)=>{
         err && console.log("4 " + err);
@@ -132,7 +130,7 @@ app.post("/api/refreshdb",  async(req, res)=>{
                 accessToken: newAccessToken, refreshToken:  newRefreshToken
             })
         } catch (error){
-            console.log("6 " + error);
+            console.log(error);
         }
 
     })
@@ -159,25 +157,16 @@ app.post("/api/loginJWT", verify, function(request, response){
 })
 
 app.post("/api/loginJWTdb", verify, async function(req, res){
-    console.log("loginjwtdb")
     const accessToken = req.body.token;
     let userid = jwt.decode(accessToken).id;
     try{
         const user = await User.findById(userid).exec();
         if(user){
-            const accessToken = generateAccessToken(user);
-            const refreshToken = generateRefreshToken(user);
-            // const refreshTokenDB = new RefreshToken({value: refreshToken});
-            // refreshTokenDB.save(function(err){
-            //     if(err){
-            //         console.log(err)
-            //     }
-            // })
             res.status(200).json({
-                username: user.username,
-                isAdmin: user.isAdmin,
-                accessToken: accessToken,
-                refreshToken: refreshToken
+                user: {
+                    username: user.username,
+                    isAdmin: user.isAdmin
+                }
             })
         } else {
             res.status(400).json("invalid token");
@@ -200,8 +189,10 @@ app.post("/api/login", (req, res) =>{
         const refreshToken = generateRefreshToken(user);
         refreshTokens.push(refreshToken);
         res.json({
-            username: user.username,
-            isAdmin: user.isAdmin,
+            user: {
+                username: user.username,
+                isAdmin: user.isAdmin
+            },
             accessToken: accessToken,
             refreshToken: refreshToken
         })
@@ -222,8 +213,10 @@ app.post("/api/logindb", async function(req, res){
                 console.log(err);
             })
             res.json({
-                username: user.username,
-                isAdmin: user.isAdmin,
+                user:{
+                    username: user.username,
+                    isAdmin: user.isAdmin        
+                },
                 accessToken: accessToken,
                 refreshToken: refreshToken
             })
@@ -240,17 +233,17 @@ app.post("/api/logindb", async function(req, res){
 //logout method
 //Run verify middleware, then removes refreshtoken from the active list
 app.post("/api/logout", verify, (req, res)=>{
-    console.log("logout attempt")
     const refreshToken = req.body.token;
     refreshTokens.filter((token) => token !== refreshToken);
     res.status(200).json("Log out successfully");
 })
 
 app.post("/api/logoutdb", verify, async (req, res) =>{
-    console.log("logoutdb attempt");
+    console.log("deleting token");
     const refreshToken = req.body.token;
+    console.log(refreshToken);
     try{
-        await RefreshToken.deleteOne({value: refreshToken});
+        await RefreshToken.deleteOne({value: refreshToken}).exec();
         res.status(200).json("successful logoutdb");
     } catch(error){
         res.status(500).json("an error happened");
