@@ -18,7 +18,7 @@ db.once('open', ()=>console.log("Listening to db on 192.168.1.35:27017"))
 app.use(express.json())
 
 const userRouter = require('./routes/user');
-app.use('/user', userRouter);
+app.use('/api/user', userRouter);
 
 
 
