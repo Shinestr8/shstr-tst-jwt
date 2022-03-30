@@ -94,7 +94,7 @@ export function Dashboard(props){
       }
 
 //function called on logout click
-  async function handleLogout(e){
+  async function logout(e){
     e.preventDefault();
     const [accessToken, refreshToken] = fetchCookies();
     try {
@@ -118,6 +118,10 @@ export function Dashboard(props){
   }
 
 
+    if(!props.user){
+        return(<div>Forbidden</div>)
+    }
+
     return (
         <div className='content'>
           {success && (
@@ -135,7 +139,7 @@ export function Dashboard(props){
             </div>
             
             <footer>
-              <button onClick={handleLogout}>Log out</button>
+              <button onClick={logout}>Log out</button>
               <button onClick={(e)=>handleDelete(e,1)}>Delete John</button>
               <button onClick={(e)=>handleDelete(e,2)}>Delete Jane</button>
             </footer>

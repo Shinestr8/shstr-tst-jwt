@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import axios from 'axios';
 import jwt_decode from "jwt-decode";
 import { useNavigate } from "react-router-dom";
@@ -10,15 +10,7 @@ export function Login(props){
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    // const [user, setUser] = useState(null);
-
-    // useEffect(()=>{
-    //     if(isLogged){
-    //         const navigate = useNavigate();
-
-    //     }
-    // }, [isLogged])
-
+    
     //username handler
     function handleTextChange(e){
         setUsername(e.target.value);
@@ -58,11 +50,6 @@ export function Login(props){
     }
   }
 
-  //useEffect that executes only on first load, to login with JWT
-  useEffect(function(){
-    logFromJWT();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[])
 
   function fetchCookies(){
     let cookies = document.cookie;
@@ -76,28 +63,6 @@ export function Login(props){
     return response;
   }
 
-  async function logFromJWT(){
-    const [accessToken, refreshToken] = fetchCookies();
-    if(accessToken&&refreshToken){
-      try {
-        const config = {
-          headers:{
-            authorization: "Bearer " + accessToken,
-          }
-        };
-        const data ={
-          token: accessToken,
-          refresh: refreshToken
-        }
-        const response = await axiosJWT.post("/loginJWT", data, config);
-        // setUser(response.data.user);
-        props.handleUser(response.data.user)
-        navigate('/dashboard');
-      } catch (error) {
-        console.log(error);
-      }
-    }
-  }
 
     async function login(e){
         e.preventDefault();
@@ -115,9 +80,7 @@ export function Login(props){
         }
     }
 
-    function redirect(){
-        navigate('/dashboard');
-    }
+    
 
     return(
         <div className='login'>
@@ -137,7 +100,6 @@ export function Login(props){
             </div>
             
             <footer>
-                {/* <button onClick={redirect}>Test Login</button> */}
                 <button onClick={login}>Login</button>
             </footer>
             
