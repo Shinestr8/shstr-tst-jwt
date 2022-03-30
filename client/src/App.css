@@ -153,6 +153,12 @@ button{
   box-sizing: border-box;
 }
 
+button:disabled{
+  background-color: gray;
+  cursor: none;
+  color: black;
+}
+
 .login .input-group{
   padding-top: 1rem;
   padding-bottom: 1rem;
