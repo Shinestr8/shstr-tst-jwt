@@ -2,11 +2,16 @@ import './App.css';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import jwt_decode from "jwt-decode";
+import {Route, Routes, BrowserRouter } from 'react-router-dom';
 
-
+import { Login } from './Pages/Login';
+import { Dashboard } from './Pages/Dashboard';
 
 function App() {
 
+  function handleUser(user){
+    setUser(user);
+  }
 
   //state
   const [username, setUsername] = useState("");
@@ -167,6 +172,15 @@ function App() {
     }
   }
 
+
+  return(
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login handleUser={handleUser}/>}/>
+        <Route path="/dashboard" element={<Dashboard user={user}/>}/>
+      </Routes>
+    </BrowserRouter>
+  )
 
   if(user === null){
     //login form
