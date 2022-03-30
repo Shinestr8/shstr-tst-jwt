@@ -48,7 +48,7 @@ function App() {
 
   //useEffect that executes only on first load, to login with JWT
   useEffect(function(){
-    logFromJWT();
+    autoLoginFromToken();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[])
 
@@ -64,7 +64,7 @@ function App() {
     return response;
   }
 
-  async function logFromJWT(){
+  async function autoLoginFromToken(){
     const [accessToken, refreshToken] = fetchCookies();
     if(accessToken&&refreshToken){
       try {
