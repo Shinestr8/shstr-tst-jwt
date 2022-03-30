@@ -14,7 +14,6 @@ function getSalt(length) {
 }
 
 function encrypt(password) {
-     let result = [];
      let salt = getSalt(32);
      password = password + salt + secret;
      password = crypto.createHash('sha256').update(password).digest('hex');
