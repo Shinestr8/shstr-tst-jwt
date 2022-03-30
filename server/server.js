@@ -1,9 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const User = require('./models/user')
+const User = require('./models/newUser')
 const RefreshToken = require('./models/refreshToken');
 let secret = require('./config.json');
+let {check} = require('./tool/password');
 const app = express();
 
 // const info = require('./db/dbconfig');
@@ -134,10 +135,13 @@ app.post("/api/loginJWT", verify, async function(req, res){
 app.post("/api/login", async function(req, res){
     const {username, password} = req.body;
     try {
+        const user = await User.findOne({username: username}).exec();
+
         //try to fetch user with param username
-        const user = await User.findOne({ username: username }).exec();
+        // const user = await User.findOne({ username: username }).exec();
         //check if user exist and password matches
-        if(user && (user.password === password)){
+        if(user && (check(password, user.salt, user.hash))){
+        // if(user && (user.password === password)){
             //generate token pair, save refresh in DB
             const accessToken = generateAccessToken(user);
             const refreshToken = generateRefreshToken(user);
