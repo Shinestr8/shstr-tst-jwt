@@ -4,7 +4,7 @@ import axios from 'axios';
 import jwt_decode from "jwt-decode";
 import {Route, Routes, BrowserRouter } from 'react-router-dom';
 
-import { Login } from './Pages/Login';
+import {Login} from './Pages/Login';
 import { Dashboard } from './Pages/Dashboard';
 
 function App() {
