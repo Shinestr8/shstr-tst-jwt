@@ -12,7 +12,7 @@ const uri = require('./db/url');
 mongoose.connect(uri);
 const db = mongoose.connection;
 db.on('error', (error)=>    console.log("1" + error));
-db.once('open', ()=>console.log("connected to db"))
+db.once('open', ()=>console.log("Listening to db on 192.168.1.35:27017"))
 
 //equivalent to body parser
 app.use(express.json())
@@ -147,7 +147,7 @@ app.post("/api/login", async function(req, res){
             const refreshToken = generateRefreshToken(user);
             const refreshTokenDB = new RefreshToken({value: refreshToken});
             refreshTokenDB.save(function(err){
-                console.log(err);
+                if(err) console.log(err);
             })
             //send user and tokens to client
             res.json({
@@ -181,7 +181,7 @@ app.post("/api/logout", async (req, res) =>{
 
  
 //delete user method
-//Run verify middleware, then check if the user have right to delete another one
+//Run verify middleware,    then check if the user have right to delete another one
 app.delete("/api/users/:userId", verify, (req, res) =>{
     //can only delete if admin or if you're trying to delete yourself
     if(req.user.id === req.params.userId || req.user.isAdmin){
@@ -192,4 +192,4 @@ app.delete("/api/users/:userId", verify, (req, res) =>{
 })
 
 const PORT = 5000;
-app.listen(PORT, ()=> console.log(  `Login backend running on http://localhost:${PORT}`))   
+app.listen(PORT, ()=> console.log(  `Login backend running on http://127.0.0.1:${PORT}`))   
