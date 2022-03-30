@@ -80,6 +80,10 @@ export function Login(props){
         }
     }
 
+    function redirectToRegister(){
+      navigate('/register');
+    }
+
     
 
     return(
@@ -100,7 +104,8 @@ export function Login(props){
             </div>
             
             <footer>
-                <button onClick={login}>Login</button>
+                <button onClick={redirectToRegister} className="registerButton" type="button">Register here</button>  
+                <button onClick={login} type="submit">Login</button>
             </footer>
             
             </form>

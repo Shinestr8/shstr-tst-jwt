@@ -7,6 +7,20 @@ h2{
   margin: 0;
 }
 
+button.registerButton{
+  text-align: center;
+  vertical-align: middle;
+  min-height: 2rem;
+  color: darkgray;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.registerButton:hover{
+  color: grey;
+  text-decoration: underline ;
+}
+
 .content{
   height: 100%;
   display: flex;

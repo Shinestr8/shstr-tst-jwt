@@ -6,6 +6,7 @@ import {Route, Routes, BrowserRouter } from 'react-router-dom';
 
 import {Login} from './Pages/Login';
 import { Dashboard } from './Pages/Dashboard';
+import {Register} from './Pages/Register'
 
 function App() {
 
@@ -90,6 +91,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login handleUser={handleUser}/>}/>
         <Route path="/dashboard" element={<Dashboard user={user}/>}/>
+        <Route path="/register" element={<Register/>}/>
       </Routes>
     </BrowserRouter>
   )
