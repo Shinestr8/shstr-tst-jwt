@@ -7,7 +7,9 @@ const RefreshToken = require('./models/refreshToken');
 let secret = require('./config.json');
 let {check} = require('./tool/password');
 const app = express();
-const CORS = require('./middleware/cors')
+const CORS = require('./middleware/cors');
+const verify = require('./middleware/verify');
+
 
 // const info = require('./db/dbconfig');
 const uri = require('./db/url');
@@ -22,27 +24,6 @@ app.use(CORS);
 
 const userRouter = require('./routes/user');
 app.use('/api/user', userRouter);
-
-
-
-//verify middleware
-//check the header for the access token, verify if it is valid
-//if the token is valid continue, else leave with 401
-const verify = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if(authHeader){
-        const token = authHeader.split(" ")[1];
-        jwt.verify(token, secret.access, (err, user)=>{
-            if(err){
-                return res.status(403).json("Token is not valid");
-            }
-            req.user = user;
-            next();
-        })
-    } else {
-        res.status(401).json("You are not authenticated");
-    }
-}
 
 //function that generates the access tokens
 function generateAccessToken(user){
@@ -67,6 +48,7 @@ app.get('/', function(req, res){
 //POST HTTP method on path /api/refresh
 //takes refreshToken as param
 //Return a new pair of access/refresh token if valid
+//requires body: token: refreshToken
 app.post("/api/refresh",  async(req, res)=>{
     const refreshToken = req.body.token;
     //if no token, exit with 401 code
