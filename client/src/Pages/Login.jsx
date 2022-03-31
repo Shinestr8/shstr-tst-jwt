@@ -2,6 +2,7 @@ import { useState} from "react";
 import axios from 'axios';
 import jwt_decode from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import { config } from "../config/config";
 
 
 export function Login(props){
@@ -11,6 +12,8 @@ export function Login(props){
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     
+    const API_URL = config.url.backend;
+
     //username handler
     function handleTextChange(e){
         setUsername(e.target.value);
@@ -40,7 +43,7 @@ export function Login(props){
   async function refreshToken(){
     try{
       const [, refreshToken] = fetchCookies();
-      const res = await axios.post("/refresh", {token: refreshToken});
+      const res = await axios.post(API_URL + "/refresh", {token: refreshToken});
       document.cookie = "access=" + res.data.accessToken;
       document.cookie = "refresh=" + res.data.refreshToken;
       console.log("refreshed")
@@ -67,7 +70,7 @@ export function Login(props){
     async function login(e){
         e.preventDefault();
         try{
-            const res = await axios.post("/login", {username, password});
+            const res = await axios.post(API_URL + "/login", {username, password});
             // setUser(res.data.user);
             props.handleUser(res.data.user);
             setUsername("");
@@ -89,7 +92,8 @@ export function Login(props){
     return(
         <div className='login'>
             <form>
-            <header><h2>Login</h2></header>
+            
+            <header><h2>{config.url.backend}</h2></header>
             <div className='input-group'>
                 <div>
                 <label htmlFor='username'>Username</label>
@@ -106,6 +110,7 @@ export function Login(props){
             <footer>
                 <button onClick={redirectToRegister} className="registerButton" type="button">Register here</button>  
                 <button onClick={login} type="submit">Login</button>
+                {/* <button onClick={env}>Test</button> */}
             </footer>
             
             </form>
