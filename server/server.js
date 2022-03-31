@@ -1,29 +1,40 @@
+//node packets
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const path = require('path');
+
+//mongoose models
 const User = require('./models/newUser')
 const RefreshToken = require('./models/refreshToken');
-let secret = require('./config.json');
-let {check} = require('./tool/password');
-const app = express();
+
+//middlewares
 const CORS = require('./middleware/cors');
 const verify = require('./middleware/verify');
 
+//routes
+const userRouter = require('./routes/user');
 
-// const info = require('./db/dbconfig');
+//functions
+let {check} = require('./tool/password');
+
+//config variables
+let secret = require('./config.json');
 const uri = require('./db/url');
+
+
+const app = express();
 mongoose.connect(uri);
 const db = mongoose.connection;
-db.on('error', (error)=>    console.log("1" + error));
-db.once('open', ()=>console.log("Listening to db on 192.168.1.35:27017"))
+db.on('error', (error)=>    console.log(error));
+db.once('open', ()=>console.log("...connected to database"))
 
-//equivalent to body parser
-app.use(express.json())
+//middlewares used on every request
+app.use(express.json()); //eq to bodyParser
 app.use(CORS);
-
-const userRouter = require('./routes/user');
 app.use('/api/user', userRouter);
+app.use(express.static(path.join(__dirname, '..', 'client', 'build')))
+
 
 //function that generates the access tokens
 function generateAccessToken(user){
@@ -37,16 +48,17 @@ function generateRefreshToken(user) {
 
 
 
-app.use(express.static(path.join(__dirname, '..', 'client', 'build')))
+//Routes
 
+
+//main route that serves front end from build folder
 app.get('/', function(req, res){
     res.sendFile(path.join(__dirname, '..', 'client', 'build', 'index.html'))
 })
 
 
-
 //POST HTTP method on path /api/refresh
-//takes refreshToken as param
+//requires body: token: refreshToken
 //Return a new pair of access/refresh token if valid
 //requires body: token: refreshToken
 app.post("/api/refresh",  async(req, res)=>{
@@ -98,7 +110,8 @@ app.post("/api/refresh",  async(req, res)=>{
 //HTTP POST method on /api/loginJWT
 //Allows a user to send a token and fetch info from it
 //uses verify middleware
-//takes accesstoken as param
+//requires : header:    authorization: Bearer accessToken
+//           body:      token: accessToken     
 app.post("/api/loginJWT", verify, async function(req, res){
     //if we reach this code, verify has successfully been executed, so accessToken is valid
     const accessToken = req.body.token;
@@ -126,9 +139,8 @@ app.post("/api/loginJWT", verify, async function(req, res){
 
 
 //HTTP POST method on route /api/login
-//takes username and password as params
+//requires Body:    username: username, password: password
 app.post("/api/login", async function(req, res){
-    console.log("login attempt")
     const {username, password} = req.body;
     try {
         const user = await User.findOne({username: username}).exec();
@@ -163,7 +175,7 @@ app.post("/api/login", async function(req, res){
 })
 
 //HTTP POST method on route /api/logout
-//takes refreshToken as param
+//requires body: token : refreshToken
 app.post("/api/logout", async (req, res) =>{
     const refreshToken = req.body.token;
     try{
@@ -187,6 +199,8 @@ app.delete("/api/users/:userId", verify, (req, res) =>{
     }
 })
 
+
+//route to make the app work with react router
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'client', 'build', 'index.html'))
   })
