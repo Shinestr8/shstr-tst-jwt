@@ -71,7 +71,6 @@ export function Login(props){
         e.preventDefault();
         try{
             const res = await axios.post(API_URL + "/login", {username, password});
-            // setUser(res.data.user);
             props.handleUser(res.data.user);
             setUsername("");
             setPassword("");
@@ -93,7 +92,7 @@ export function Login(props){
         <div className='login'>
             <form>
             
-            <header><h2>{config.url.backend}</h2></header>
+            <header><h2>Login</h2></header>
             <div className='input-group'>
                 <div>
                 <label htmlFor='username'>Username</label>
@@ -110,7 +109,6 @@ export function Login(props){
             <footer>
                 <button onClick={redirectToRegister} className="registerButton" type="button">Register here</button>  
                 <button onClick={login} type="submit">Login</button>
-                {/* <button onClick={env}>Test</button> */}
             </footer>
             
             </form>
