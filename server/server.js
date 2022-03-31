@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const path = require('path');
 const User = require('./models/newUser')
 const RefreshToken = require('./models/refreshToken');
 let secret = require('./config.json');
@@ -50,6 +51,16 @@ function generateAccessToken(user){
 function generateRefreshToken(user) {
     return jwt.sign({id:user.id, isAdmin:user.isAdmin}, secret.refresh);
 }
+
+
+
+app.use(express.static(path.join(__dirname, '..', 'client', 'build')))
+
+app.get('/', function(req, res){
+    res.sendFile(path.join(__dirname, '..', 'client', 'build', 'index.html'))
+})
+
+
 
 //POST HTTP method on path /api/refresh
 //takes refreshToken as param
@@ -133,6 +144,7 @@ app.post("/api/loginJWT", verify, async function(req, res){
 //HTTP POST method on route /api/login
 //takes username and password as params
 app.post("/api/login", async function(req, res){
+    console.log("login attempt")
     const {username, password} = req.body;
     try {
         const user = await User.findOne({username: username}).exec();
@@ -192,4 +204,4 @@ app.delete("/api/users/:userId", verify, (req, res) =>{
 })
 
 const PORT = 5000;
-app.listen(PORT, ()=> console.log(  `Login backend running on http://127.0.0.1:${PORT}`))   
+app.listen(PORT, ()=> console.log(  `running on http://127.0.0.1:${PORT}`))   
