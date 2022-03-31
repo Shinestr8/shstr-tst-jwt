@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { config } from "../config/config";
@@ -12,6 +12,10 @@ export function Register(){
     const navigate = useNavigate();
 
     const API_URL = config.url.backend;
+
+    useEffect(function(){
+        document.title = "Register"
+    }, [])
 
     function handleUsernameChange(e){
         setUsername(e.target.value);

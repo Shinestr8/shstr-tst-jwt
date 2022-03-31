@@ -31,6 +31,11 @@ export function Dashboard(props){
         })
     }, [success, error])
 
+
+    useEffect(function(){
+      document.title = "Dashboard"
+    }, [])
+
     //axios instance
   const axiosJWT = axios.create();
 
