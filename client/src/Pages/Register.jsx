@@ -1,6 +1,8 @@
 import { useState } from "react"
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { config } from "../config/config";
+
 
 export function Register(){
 
@@ -8,6 +10,8 @@ export function Register(){
     const [password, setPassword] = useState("");
 
     const navigate = useNavigate();
+
+    const API_URL = config.url.backend;
 
     function handleUsernameChange(e){
         setUsername(e.target.value);
@@ -20,7 +24,7 @@ export function Register(){
     async function register(e){
         e.preventDefault();
         try {
-            const res = await axios.post("/user", {username: username, password:password});
+            const res = await axios.post(API_URL + "/user", {username: username, password:password});
             if(res.status === 201){
                 navigate('/')   
             }

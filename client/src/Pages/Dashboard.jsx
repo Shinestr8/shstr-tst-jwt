@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import jwt_decode from "jwt-decode";
+import { config } from "../config/config";
 
 export function Dashboard(props){
     const user = props.user;
@@ -10,6 +11,8 @@ export function Dashboard(props){
     const [error, setError] = useState(false);
 
     const navigate = useNavigate();
+
+    const API_URL = config.url.backend;
 
     useEffect(function(){
         let timer;
@@ -48,7 +51,7 @@ export function Dashboard(props){
   async function refreshToken(){
     try{
       const [, refreshToken] = fetchCookies();
-      const res = await axios.post("/refresh", {token: refreshToken});
+      const res = await axios.post(API_URL + "/refresh", {token: refreshToken});
       document.cookie = "access=" + res.data.accessToken;
       document.cookie = "refresh=" + res.data.refreshToken;
       console.log("refreshed")
@@ -63,7 +66,7 @@ export function Dashboard(props){
         setSuccess(false);
         setError(false);
         try{
-          await axiosJWT.delete("/users/"+id, {
+          await axiosJWT.delete(API_URL + "/users/"+id, {
             headers: {authorization: "Bearer " + fetchCookies()[0]}
           });
           alertSuccess();
@@ -106,7 +109,7 @@ export function Dashboard(props){
       const data ={
         token: refreshToken,
       }
-      await axios.post("/logout", data, config);
+      await axios.post(API_URL + "/logout", data, config);
       setSuccess("");
       setError("");
       document.cookie = "access=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";

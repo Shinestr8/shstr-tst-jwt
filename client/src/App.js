@@ -8,6 +8,8 @@ import {Login} from './Pages/Login';
 import { Dashboard } from './Pages/Dashboard';
 import {Register} from './Pages/Register'
 
+import { config } from './config/config';
+
 function App() {
 
   function handleUser(user){
@@ -19,6 +21,8 @@ function App() {
 
   //axios instance
   const axiosJWT = axios.create();
+
+  const API_URL = config.url.backend;
 
   //interceptor, executed before every request on axiosJWT
   axiosJWT.interceptors.request.use(
@@ -37,7 +41,7 @@ function App() {
   async function refreshToken(){
     try{
       const [, refreshToken] = fetchCookies();
-      const res = await axios.post("/refresh", {token: refreshToken});
+      const res = await axios.post(API_URL + "/refresh", {token: refreshToken});
       document.cookie = "access=" + res.data.accessToken;
       document.cookie = "refresh=" + res.data.refreshToken;
       console.log("refreshed")
@@ -78,7 +82,7 @@ function App() {
           token: accessToken,
           refresh: refreshToken
         }
-        const response = await axiosJWT.post("/loginJWT", data, config);
+        const response = await axiosJWT.post(API_URL + "/loginJWT", data, config);
         setUser(response.data.user);
       } catch (error) {
         console.log(error);
