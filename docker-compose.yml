@@ -1,0 +1,35 @@
+services:
+
+  jwt_backend:
+    image: jwt_backend
+    container_name: jwt_backend
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+    working_dir: /usr/src/app/
+    restart: always
+    environment:
+      PORT: 5000
+      MONGO_URI: mongodb://default_root:default_password@jwt_mongo:27017/jwt?authSource=admin
+    volumes:
+      - ./server:/app
+      
+  database:
+    container_name: jwt_mongo
+    logging:
+      driver: none
+    image: mongo:5.0.7
+    restart: always
+    volumes:
+      - jwt_mongo_volume:/data/db
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: default_root
+      MONGO_INITDB_ROOT_PASSWORD: default_password
+
+
+volumes:
+  jwt_mongo_volume:

@@ -20,20 +20,16 @@ let {check} = require('./tool/password');
 
 //config variables
 let secret = require('./config.json');
-const uri = require('./db/url');
-
 
 const app = express();
-mongoose.connect(uri);
-const db = mongoose.connection;
-db.on('error', (error)=>    console.log(error));
-db.once('open', ()=>console.log("...connected to database"))
+
+require('./initDB')();
 
 //middlewares used on every request
 app.use(express.json()); //eq to bodyParser
 app.use(CORS);
 app.use('/api/user', userRouter);
-app.use(express.static(path.join(__dirname, '..', 'client', 'build')))
+app.use(express.static(path.join(__dirname, 'build')))
 
 
 //function that generates the access tokens
@@ -53,7 +49,7 @@ function generateRefreshToken(user) {
 
 //main route that serves front end from build folder
 app.get('/', function(req, res){
-    res.sendFile(path.join(__dirname, '..', 'client', 'build', 'index.html'))
+    res.sendFile(path.join(__dirname, 'build', 'index.html'))
 })
 
 
@@ -202,7 +198,7 @@ app.delete("/api/users/:userId", verify, (req, res) =>{
 
 //route to make the app work with react router
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'client', 'build', 'index.html'))
+    res.sendFile(path.join(__dirname, 'build', 'index.html'))
   })
 
 const PORT = 5000;

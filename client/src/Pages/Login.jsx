@@ -73,8 +73,11 @@ export function Login(props){
 
     async function login(e){
         e.preventDefault();
+        
         try{
+            console.log(API_URL + "/login", {username, password})  
             const res = await axios.post(API_URL + "/login", {username, password});
+            
             props.handleUser(res.data.user);
             setUsername("");
             setPassword("");

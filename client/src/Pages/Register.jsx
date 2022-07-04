@@ -28,6 +28,7 @@ export function Register(){
     async function register(e){
         e.preventDefault();
         try {
+            console.log(API_URL + "/user", {username: username, password:password})
             const res = await axios.post(API_URL + "/user", {username: username, password:password});
             if(res.status === 201){
                 navigate('/')   
